@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cbnk3q73pmjki"]
+
+[ext_resource type="Script" uid="uid://beemijrtw0lce" path="res://scripts/dungeon_level.gd" id="1_w2twt"]
+
+[node name="MainScene" type="Node2D" unique_id=7867252]
+script = ExtResource("1_w2twt")
