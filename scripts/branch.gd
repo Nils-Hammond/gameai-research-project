@@ -8,7 +8,7 @@ var min_height = 40
 var min_trim: = 1
 var max_trim: = 50
 
-var corridor_margin = 5
+var corridor_width = 20
 
 var left_child: Branch
 var right_child: Branch
@@ -77,9 +77,32 @@ func trim():
 		right_child.trim()
 
 func _get_safe_trim(rand, available_size, min_size):
+	var trim = available_size / 3
 	var max_possible_trim = max(0, available_size - min_size)
 	var low = min(min_trim, max_possible_trim)
-	var high = min(max_trim, max_possible_trim)
+	var high = min(trim, max_possible_trim)
 	if (high <= 0):
 		return 0
 	return rand.randi_range(low, high)
+
+func connect_corridors(corridors: Array[Rect2i]):
+	if (is_leaf()):
+		return
+	
+	left_child.connect_corridors(corridors)
+	right_child.connect_corridors(corridors)
+	
+	var a = left_child.get_center()
+	var b = right_child.get_center()
+	var half = corridor_width / 2
+	
+	if a.y == b.y:
+		corridors.append(Rect2i(
+			Vector2i(min(a.x, b.x) - half, a.y - half),
+			Vector2i(abs(a.x - b.x) + corridor_width, corridor_width)
+		))
+	else:
+		corridors.append(Rect2i(
+			Vector2i(a.x - half, min(a.y, b.y) - half),
+			Vector2i(corridor_width, abs(a.y - b.y) + corridor_width)
+		))

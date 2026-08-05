@@ -4,7 +4,7 @@ var root_node: Branch
 var tile_size: int = 16
 var split_depth = 5
 
-var corridors: Array
+var corridors: Array[Rect2i] = []
 
 func _ready() -> void:
 	ImGui.imgui_layout.connect(self._on_layout)
@@ -12,9 +12,8 @@ func _ready() -> void:
 	pass
 
 func _draw():
-	draw_rect(Rect2(0,0,40,40),Color.PURPLE, true)
 	for corridor in corridors:
-		draw_rect(corridor, Color.RED, false)
+		draw_rect(corridor, Color.RED, true)
 	for leaf in root_node.get_leaves():
 		draw_rect(
 			Rect2(
@@ -24,7 +23,7 @@ func _draw():
 				leaf.size.y
 			),
 			Color.GREEN,
-			false
+			true
 		)
 	pass
 
@@ -35,8 +34,10 @@ func _on_layout():
 			build_tree(Vector2i(0, 0), Vector2i(1000, 600))
 	ImGui.end()
 
-func build_tree(position, size):
-	root_node = Branch.new(position, size)
+func build_tree(pos, size):
+	root_node = Branch.new(pos, size)
 	root_node.split(split_depth)
+	corridors = []
+	root_node.connect_corridors(corridors)
 	root_node.trim()
 	queue_redraw()
