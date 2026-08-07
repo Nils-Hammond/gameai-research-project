@@ -44,16 +44,17 @@ func split(remaining: int):
 	var split_percent = randf_range(settings.split_min_percent, settings.split_max_percent)
 	var split_horizontal = size.y >= size.x if not settings.random_split else randf() < 0.5
 	
-	if (randf() > settings.force_dead_end_chance && split_horizontal &&
-		size.y * split_percent >= max(settings.min_size, settings.corridor_width)):
+	if randf() < settings.force_dead_end_chance:
+		return
+	
+	if (split_horizontal && size.y * split_percent >= max(settings.min_size, settings.corridor_width)):
 		var left_height = int(size.y * split_percent)
 		left_child = Branch.new(position, Vector2i(size.x, left_height), depth + 1, settings)
 		right_child = Branch.new(
 			Vector2i(position.x, position.y + left_height),
 			Vector2i(size.x, size.y - left_height), depth + 1, settings
 		)
-	elif (randf() > settings.force_dead_end_chance &&
-		size.x * split_percent >= max(settings.min_size, settings.corridor_width)):
+	elif (size.x * split_percent >= max(settings.min_size, settings.corridor_width)):
 		var left_width = int(size.x * split_percent)
 		left_child = Branch.new(position, Vector2i(left_width, size.y), depth + 1, settings)
 		right_child = Branch.new(
@@ -66,7 +67,6 @@ func split(remaining: int):
 			left_child.split(remaining - 1)
 		if (right_child):
 			right_child.split(remaining - 1)
-	pass
 
 func trim():
 	if (is_leaf()):
@@ -125,8 +125,37 @@ func build_corridors(width: int, all_rooms: Array[Rect2i]) -> Array[Rect2i]:
 		return []
 	
 	var corridors := left_child.build_corridors(width, all_rooms) + right_child.build_corridors(width, all_rooms)
-	var leaf1 = left_child.get_random_leaf().get_room()
-	var leaf2 = right_child.get_random_leaf().get_room()
-	corridors.append_array(CorridorBuilder.connect_rooms(leaf1, leaf2, width, all_rooms))
+	var room_pair = _pick_pair(left_child, right_child)
+	corridors.append_array(CorridorBuilder.connect_rooms(room_pair[0], room_pair[1], width, all_rooms))
 	return corridors
+
+func _pick_pair(left: Branch, right:Branch) -> Array:
+	if not settings.connect_closest_rooms:
+		return [left.get_random_leaf().get_room(), right.get_random_leaf().get_room()]
+	return _closest_pair(left, right)
+
+func _closest_pair(left: Branch, right: Branch) -> Array:
+	if left.is_leaf() && right.is_leaf():
+		return [left.get_room(), right.get_room()]
+	if left.is_leaf():
+		return _closer_pair(_closest_pair(left, right.left_child), _closest_pair(left, right.right_child))
+	if right.is_leaf():
+		return _closer_pair(_closest_pair(left.left_child, right), _closest_pair(left.right_child, right))
 	
+	var candidates = [
+		_closest_pair(left.left_child, right.left_child),
+		_closest_pair(left.left_child, right.right_child),
+		_closest_pair(left.right_child, right.left_child),
+		_closest_pair(left.right_child, right.right_child)
+	]
+	var best = candidates[0]
+	for c in candidates:
+		best = _closer_pair(best, c)
+	return best
+
+static func _closer_pair(pair_a: Array, pair_b: Array) -> Array:
+	return pair_a if _dist_sq(pair_a[0], pair_a[1]) <= _dist_sq(pair_b[0], pair_b[1]) else pair_b
+
+static func _dist_sq(a: Rect2i, b: Rect2i) -> int:
+	var d = (a.position + a.size / 2) - (b.position + b.size / 2)
+	return d.x * d.x + d.y * d.y

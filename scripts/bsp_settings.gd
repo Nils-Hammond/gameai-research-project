@@ -10,4 +10,4 @@ class_name BspSettings
 @export var corridor_width: int = 20
 @export var force_dead_end_chance: float = 0
 @export var random_split: bool = false
-@export var random_corridor_connection: bool = true
+@export var connect_closest_rooms: bool = true
