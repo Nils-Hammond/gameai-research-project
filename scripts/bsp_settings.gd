@@ -8,5 +8,6 @@ class_name BspSettings
 @export var split_min_percent: float = 0.3
 @export var split_max_percent: float = 0.7
 @export var corridor_width: int = 20
+@export var force_dead_end_chance: float = 0
 @export var random_split: bool = false
 @export var random_corridor_connection: bool = true

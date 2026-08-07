@@ -59,9 +59,12 @@ func _on_layout():
 
 		bsp_settings.random_split = ImGui.checkbox("Random Split Direction", bsp_settings.random_split)
 		
+		ImGui.text("Dead End Chance")
+		bsp_settings.force_dead_end_chance = ImGui.slider_float("##Dead End Chance", bsp_settings.force_dead_end_chance, 0, 1)
+		
 		ImGui.text("Trim Range")
 		var trim_percents = Vector2(bsp_settings.trim_min_percent, bsp_settings.trim_max_percent)
-		trim_percents = ImGui.slider_float2("Trim Range", trim_percents, 0, 0.99)
+		trim_percents = ImGui.slider_float2("##Trim Range", trim_percents, 0, 0.99)
 		trim_percents[0] = min(trim_percents[0], trim_percents[1])
 		trim_percents[1] = max(trim_percents[0], trim_percents[1])
 		bsp_settings.trim_min_percent = trim_percents[0]
@@ -71,9 +74,9 @@ func _on_layout():
 			build_tree(Vector2i(0, 0), Vector2i(1000, 600))
 	ImGui.end()
 
-func build_tree(pos, size):
+func build_tree(pos: Vector2i, size: Vector2i):
 	root_node = Branch.new(pos, size, 0, bsp_settings)
 	root_node.split(split_depth)
 	root_node.trim()
-	corridors = root_node.build_corridors(bsp_settings.corridor_width)
+	corridors = root_node.build_corridors(bsp_settings.corridor_width, root_node.get_rooms())
 	queue_redraw()

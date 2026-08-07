@@ -4,13 +4,14 @@ class_name CorridorBuilder
 
 enum Bend {HORIZONTAL_FIRST, VERTICAL_FIRST}
 
-static func connect_rooms(from: Rect2i, to: Rect2i, width: int) -> Array[Rect2i]:
+static func connect_rooms(from: Rect2i, to: Rect2i, width: int, all_rooms: Array[Rect2i]) -> Array[Rect2i]:
 	var straight = _try_straight_corridor(from, to, width)
 	if (not straight.is_empty()):
 		return straight
 	else:
-		var bend = Bend.HORIZONTAL_FIRST if randi() % 2 == 0 else Bend.VERTICAL_FIRST
-		return _bent_corridor(from, to, width, bend)
+		#var bend = Bend.HORIZONTAL_FIRST if randf() < 0.5 else Bend.VERTICAL_FIRST
+		#return _bent_corridor(from, to, width, bend)
+		return _best_bent_corridor(from, to, width, all_rooms)
 
 static func _try_straight_corridor(from: Rect2i, to: Rect2i, width: int) -> Array[Rect2i]:
 	# Try horizontal corridor
@@ -37,6 +38,34 @@ static func _try_straight_corridor(from: Rect2i, to: Rect2i, width: int) -> Arra
 	
 	# No straight corridor possible
 	return []
+
+static func count_overlaps(corridor_rects: Array[Rect2i], all_rooms: Array[Rect2i], exclude: Array[Rect2i] = []) -> int:
+	var count := 0
+	for room in all_rooms:
+		if room in exclude:
+			continue
+		for section in corridor_rects:
+			if section.intersects(room):
+				count += 1
+				break
+	return count
+
+static func _best_bent_corridor(from: Rect2i, to: Rect2i, width: int, all_rooms: Array[Rect2i]) -> Array[Rect2i]:
+	var h_first := _bent_corridor(from, to, width, Bend.HORIZONTAL_FIRST)
+	var v_first := _bent_corridor(from, to, width, Bend.VERTICAL_FIRST)
+	
+	if all_rooms.is_empty():
+		return h_first if randf() < 0.5 else v_first
+	
+	var h_overlaps := count_overlaps(h_first, all_rooms, [from, to])
+	var v_overlaps := count_overlaps(v_first, all_rooms, [from, to])
+	
+	if h_overlaps < v_overlaps:
+		return h_first
+	elif v_overlaps < h_overlaps:
+		return v_first
+	else:
+		return h_first if randf() < 0.5 else v_first
 
 static func _bent_corridor(from: Rect2i, to: Rect2i, width: int, bend: Bend) -> Array[Rect2i]:
 	var half = width / 2
