@@ -4,10 +4,12 @@ var panel_width = 250
 
 var root_node: Branch
 
-var split_depth = 5
+var split_depth = 3
 var bsp_settings: BspSettings
 
 var corridors: Array[Rect2i] = []
+var alt_corridors: Array[Rect2i] = []
+var show_alt: bool = false
 
 func _ready() -> void:
 	bsp_settings = BspSettings.new()
@@ -17,8 +19,12 @@ func _ready() -> void:
 	pass
 
 func _draw():
-	for corridor in corridors:
-		draw_rect(corridor, Color.RED, true)
+	if (show_alt):
+		for corridor in alt_corridors:
+			draw_rect(corridor, Color.RED, true)
+	else:
+		for corridor in corridors:
+			draw_rect(corridor, Color.RED, true)
 		
 	var max_depth = get_max_depth()
 	for leaf in root_node.get_leaves():
@@ -40,6 +46,15 @@ func get_max_depth() -> int:
 	for leaf in root_node.get_leaves():
 		max_d = max(max_d, leaf.depth)
 	return max_d
+
+func build_tree(pos: Vector2i, size: Vector2i):
+	root_node = Branch.new(pos, size, 0, bsp_settings)
+	root_node.split(split_depth)
+	alt_corridors = []
+	root_node.basic_build_corridors(alt_corridors)
+	root_node.trim()
+	corridors = root_node.build_corridors(bsp_settings.corridor_width, root_node.get_rooms())
+	queue_redraw()
 
 func _on_layout():
 	var viewport_size = get_viewport().get_visible_rect().size
@@ -97,11 +112,9 @@ func _on_layout():
 		ImGui.separator()
 		if (ImGui.button("Regenerate", 0, 0)):
 			build_tree(Vector2i(panel_width, 0), Vector2i(viewport_size.x - panel_width, viewport_size.y))
+		
+		var prev = show_alt
+		show_alt = ImGui.checkbox("Show Alternative Corridors", show_alt)
+		if prev != show_alt:
+			queue_redraw()
 	ImGui.end()
-
-func build_tree(pos: Vector2i, size: Vector2i):
-	root_node = Branch.new(pos, size, 0, bsp_settings)
-	root_node.split(split_depth)
-	root_node.trim()
-	corridors = root_node.build_corridors(bsp_settings.corridor_width, root_node.get_rooms())
-	queue_redraw()

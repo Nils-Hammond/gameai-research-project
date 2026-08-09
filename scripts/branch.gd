@@ -47,14 +47,14 @@ func split(remaining: int):
 	if randf() < settings.force_dead_end_chance:
 		return
 	
-	if (split_horizontal && size.y * split_percent >= max(settings.min_size, settings.corridor_width)):
+	if (split_horizontal && size.y >= 2 * max(settings.min_size, settings.corridor_width)):
 		var left_height = int(size.y * split_percent)
 		left_child = Branch.new(position, Vector2i(size.x, left_height), depth + 1, settings)
 		right_child = Branch.new(
 			Vector2i(position.x, position.y + left_height),
 			Vector2i(size.x, size.y - left_height), depth + 1, settings
 		)
-	elif (size.x * split_percent >= max(settings.min_size, settings.corridor_width)):
+	elif (size.x >= 2 * max(settings.min_size, settings.corridor_width)):
 		var left_width = int(size.x * split_percent)
 		left_child = Branch.new(position, Vector2i(left_width, size.y), depth + 1, settings)
 		right_child = Branch.new(
@@ -91,19 +91,19 @@ func trim():
 func _get_safe_trim(available_size: int):
 	var min_trim = available_size * settings.trim_min_percent
 	var max_trim = available_size * settings.trim_max_percent
-	var max_possible_trim = max(0, available_size - settings.min_size)
+	var max_possible_trim = max(0, available_size - max(settings.min_size, settings.corridor_width))
 	var low = min(min_trim, max_possible_trim)
 	var high = min(max_trim, max_possible_trim)
 	if (high <= 0):
 		return 0
 	return randi_range(low, high)
 
-func connect_corridors(corridors: Array[Rect2i]):
+func basic_build_corridors(corridors: Array[Rect2i]):
 	if (is_leaf()):
 		return
 	
-	left_child.connect_corridors(corridors)
-	right_child.connect_corridors(corridors)
+	left_child.basic_build_corridors(corridors)
+	right_child.basic_build_corridors(corridors)
 	
 	var a = left_child.get_center()
 	var b = right_child.get_center()
