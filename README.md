@@ -1,6 +1,6 @@
 # Binary Space Partitioning for Dungeon Generation
 
-The following is my research project on procedural dungeon generation using binary space partition (BSP) in Godot 4, a technique that allows to generate levels in the style of games such as Rogue, Nethack or Cogmind. This project was motivated by my interest in roguelikes and ways to implement procedural generation for them, and also to learn how to use Godot a bit more.
+The following is my research project on procedural dungeon generation using binary space partition (BSP) in Godot 4.7, a technique that allows to generate levels in the style of games such as Rogue, Nethack or Cogmind. This project was motivated by my interest in roguelikes and ways to implement procedural generation for them, and also to learn how to use Godot a bit more.
 
 ## Introduction
 
